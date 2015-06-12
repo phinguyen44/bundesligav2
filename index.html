@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>2014-2015 Bundesliga Season, Charted</title>
+<meta charset="utf-8">
+<style>
+	body {
+		font-family: Avenir;
+		font-size: 12px;
+	}
+	svg {
+		border-style:solid;
+		border-width: 2px;
+	}
+	.clearfix {
+		clear: both;
+	}
+	.axis path {
+  		fill: none;
+  		stroke: #000;
+  		stroke-width: 2px;
+	}
+	.axis line {
+		fill: none;
+	}
+	.bar {
+		opacity: 0.1;
+	}
+	.line {
+		fill:none;
+		stroke: lightgrey;
+		stroke-width: 2px;
+		opacity: 0.7;
+	}
+	.hoverline {
+		fill:none;
+		stroke: lightgrey;
+		stroke-width: 8px;
+		opacity: 0;
+	}
+	.tbox {
+		fill: #e1e1e1;
+		stroke: black;
+	}
+</style>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-46752978-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</head>
+<body>
+<!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
+<script type="text/javascript" src="d3.min.js"></script>
+<script>
+
+//////////////////////////////////////////////////////////
+//			Set up basic elements of graph: 			//
+// 		margins, body, svg element, scales, axis		//
+//////////////////////////////////////////////////////////
+
+	//set margins
+	var margin = {top: 20, right: 240, bottom: 80, left: 60},
+		width = 1000 - margin.left - margin.right,
+		height = 520 - margin.top - margin.bottom;
+
+	//set body
+	var body = d3.select("body");
+
+	body.append("h2")
+		.text("2014-2015 Bundesliga Season, Visualized");
+
+	body.append("text")
+		.style("font-weight", "bold")
+		.text("How to use:");
+
+	body.append("text")
+		.text(" Compare team standings over the course of the season. Mouse over a team name or line to highlight an individual team.");
+
+	body.append("div")
+		.attr("class", "clearfix");
+
+	//set size of svg element (width refers to chart width, height to chart height)
+	var svg = body.append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	//set scales
+	var x = d3.scale.linear()
+		.range([0, width]);
+
+	var y = d3.scale.linear()
+		.domain([0.5, 18.5])
+		.range([0,height]);
+
+	//add x axis
+	var xAxis = d3.svg.axis()
+		.scale(x)
+		.orient("bottom")
+		.outerTickSize(0);
+
+	//add y axis
+	var yAxis = d3.svg.axis()
+		.scale(y)
+		.orient("left")
+		.outerTickSize(0);
+
+	//add y axis label
+	svg.append("g")
+		.call(yAxis)
+		.attr("class", "axis")
+		.append("text")
+			.attr("transform", "rotate(-90)")
+			.attr("y", (-margin.left/2))
+			.attr("x", (-10-height/2))
+			.style("text-anchor", "middle")
+			.style("opacity", "0.4")
+			.text("Standings");
+
+	//define line
+	var teamline = d3.svg.line()
+		.interpolate("monotone")
+		.x(function (d) {return x(d.matchday);})
+		.y(function (d) {return y(d.standings);});
+
+//////////////////////////////////////////////////////////
+//			Load data from csv							//
+//////////////////////////////////////////////////////////
+
+	/*output format of data: Array[18]
+	[
+		{
+			"key": "Borussia Dortmund",
+			"color": "#F9E715",
+			"logo": "URL",
+			"label": 7,
+			"values": [
+				{"matchday": 1, "standings": 2},
+				{"matchday": 2, "standings": 5},
+			]
+		},
+		*all 18 teams in a separate object
+	]
+
+	*/
+
+	//load team logos and color data from csv
+	var teamlogos;
+	var colors;
+
+	d3.csv("teamcolor.csv", function(error,data){
+
+		//ordinal scale for team URLS
+		teamlogos = d3.scale.ordinal()
+			.domain(data.map(function(element) {return element.team;}))
+			.range(data.map(function(element) {return element.logo;}));
+
+		//ordinal scale for team colors
+		colors = d3.scale.ordinal()
+			.domain(data.map(function(element) {return element.team;}))
+			.range(data.map(function(element) {return element.color;}));
+
+	});
+
+	//load actual season data
+	d3.csv("alldata.csv", function(error,data) {
+
+		console.log("Initial Data", data);
+
+		//convert text to numeric
+		data.forEach(function(d) {
+			d.matchday = +d.matchday;
+			d.standings = +d.standings;
+		});
+
+		x.domain([0.8, d3.max(data, function(d) {return d.matchday;})+0.2]);
+
+		//add x axis label
+		svg.append("g")
+			.call(xAxis)
+			.attr("transform", "translate(0," + (height-1) + ")")
+			.attr("class", "axis")
+			.append("text")
+				.attr("transform", "translate(" + (-10+width/2) + "," + (5+margin.bottom/3) +")")
+				.style("text-anchor", "middle")
+				.style("opacity", "0.4")
+				.text("Matches Played");
+
+		//nest the data as an array with key = d.team
+		var dataNest = d3.nest()
+	        .key(function(d) {return d.team;})
+	        .entries(data);
+
+	    //get the length of the matchdays for each team
+	    var lengthall = dataNest[1].values.length - 1;
+
+		console.log("Updated Data", dataNest);
+
+		//map color, logo, and placement of end label to teams
+		dataNest.forEach(function(d) {
+			return d.color = colors(d.key), 
+				d.logo = teamlogos(d.key), 
+				d.label = d.values[lengthall].standings;
+		});
+
+		//////////////////////////////////////////////////////////
+		//			Use DATA JOINS to bind data to lines		//
+		//////////////////////////////////////////////////////////
+
+		var teamdata = svg.selectAll(".teamdata")
+			.data(dataNest)
+			.enter().append("g")
+			.attr("class", "teamdata");
+
+		//add a colored line for each team
+		var linesetup = teamdata.append("path")
+			.attr("class", "line")
+			.style("stroke", function(d) {return d.color;})
+			.attr("d", function(d) {return teamline(d.values);});
+
+		//add a dummy hoverline just to make it easier when someone hovers over for mouse over events
+		var hoversetup = teamdata.append("path")
+			.attr("class", "hoverline")
+			//id is used to help identify line for mouseover events later
+			.attr("id", function(d,i) {return "path-"+i;})
+			.attr("d", function(d) {return teamline(d.values);});
+
+		//create text labels for each team
+		var textsetup = teamdata.append("text")
+			.attr("class", "ttext")
+			.attr("id", function(d,i) {return "text-"+i;})
+			.attr("x", width+35)
+			.attr("y", function(d) {return y(d.label);})
+			.attr("dy", ".35em")
+			.text(function(d) {return d.key;});
+
+		//append logos
+		var logosetup = teamdata.append("image")
+			.attr("class", "tlogo")
+			.attr("xlink:href", function(d) {return d.logo;})
+			.attr("x", width)
+			.attr("y", function(d) {return y(-0.5+d.label);})
+			.attr("height", height*(1/20))
+			.attr("width", width*(1/20));
+
+		//////////////////////////////////////////////////////////
+		//			Add hover interactive elements				//
+		//////////////////////////////////////////////////////////
+
+		hoversetup.on("mouseover", function(d,i) {
+			d3.select(this)
+				.style("stroke", function(d) {return d.color;})
+				.style("opacity", "1")
+				this.parentNode.parentNode.appendChild(this.parentNode);
+			d3.select("#text-"+i)
+				.style("font-weight", "bold");
+		})
+		.on("mouseout", function(d,i) {
+			d3.select(this)
+				.transition()
+				.duration(400)
+				.style("opacity", "0")
+			d3.select("#text-"+i)
+				.style("font-weight", "")
+		});
+
+		textsetup.on("mouseover", function(d,i) {
+			d3.select(this)
+				.style("font-weight", "bold")
+			d3.select("#path-"+i)
+				.style("stroke", function(d) {return d.color;})
+				.style("opacity", "1")
+				this.parentNode.parentNode.appendChild(this.parentNode);
+		})
+		.on("mouseout", function(d,i) {
+			d3.select(this)
+				.style("font-weight", "")
+			d3.select("#path-"+i)
+				.transition()
+				.duration(400)
+				.style("opacity", "0");
+		});
+
+		logosetup.on("mouseover", function(d,i) {
+			d3.select("#path-"+i)
+				.style("stroke", function(d) {return d.color;})
+				.style("opacity", "1")
+				this.parentNode.parentNode.appendChild(this.parentNode)
+			d3.select("#text-"+i)
+				.style("font-weight", "bold");
+		})
+		.on("mouseout", function(d,i) {
+			d3.select("#path-"+i)
+				.transition()
+				.duration(400)
+				.style("opacity", "0")
+			d3.select("#text-"+i)
+				.style("font-weight", "");
+		});
+
+	});
+
+//////////////////////////////////////////////////////////
+//			Add miscellaneous closing text				//
+//////////////////////////////////////////////////////////
+
+	body.append("div")
+		.attr("class", "clearfix");
+
+	body.append("text")
+		.text("Created by ");
+
+	body.append("text")
+		.html("<a href='https://twitter.com/phister44'>Phi Nguyen</a>");
+
+	body.append("text")
+		.text(" with a lot of inspiration from ");
+
+	body.append("text")
+		.html("<a href='http://forrestthewoods.com/unbalanced-design-of-super-smash-brothers/'>this post.</a>");
+
+</script>
+</body>
+</html>
