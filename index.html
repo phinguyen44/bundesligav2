@@ -8,10 +8,6 @@
 		font-family: Avenir;
 		font-size: 12px;
 	}
-	svg {
-		border-style:solid;
-		border-width: 2px;
-	}
 	.clearfix {
 		clear: both;
 	}
@@ -65,7 +61,7 @@
 //////////////////////////////////////////////////////////
 
 	//set margins
-	var margin = {top: 20, right: 240, bottom: 80, left: 60},
+	var margin = {top: 20, right: 240, bottom: 60, left: 60},
 		width = 1000 - margin.left - margin.right,
 		height = 520 - margin.top - margin.bottom;
 
@@ -75,15 +71,13 @@
 	body.append("h2")
 		.text("2014-2015 Bundesliga Season, Visualized");
 
-	body.append("text")
-		.style("font-weight", "bold")
-		.text("How to use:");
-
-	body.append("text")
-		.text(" Compare team standings over the course of the season. Mouse over a team name or line to highlight an individual team.");
-
+	//some space for the buttons
 	body.append("div")
-		.attr("class", "clearfix");
+		.attr("class", "buttonSelectors")
+		.text("temp");
+
+	// body.append("div")
+	// 	.attr("class", "clearfix");
 
 	//set size of svg element (width refers to chart width, height to chart height)
 	var svg = body.append("svg")
@@ -188,7 +182,7 @@
 			.attr("transform", "translate(0," + (height-1) + ")")
 			.attr("class", "axis")
 			.append("text")
-				.attr("transform", "translate(" + (-10+width/2) + "," + (5+margin.bottom/3) +")")
+				.attr("transform", "translate(" + (-10+width/2) + "," + (5+margin.bottom/2) +")")
 				.style("text-anchor", "middle")
 				.style("opacity", "0.4")
 				.text("Matches Played");
