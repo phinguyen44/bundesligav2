@@ -71,10 +71,14 @@
 	body.append("h2")
 		.text("2014-2015 Bundesliga Season, Visualized");
 
+	var buttons = ["Standings", "Points", "Wins", "Goals", "Goal Differential"];
+
 	//some space for the buttons
-	body.append("div")
+	var buttonSelect = body.append("div")
 		.attr("class", "buttonSelectors")
-		.text("temp");
+		.selectAll("div").data(buttons)
+			.enter().append("div")
+				.text(function(d) {return d;});
 
 	// body.append("div")
 	// 	.attr("class", "clearfix");
@@ -136,8 +140,7 @@
 			"logo": "URL",
 			"label": 7,
 			"values": [
-				{"matchday": 1, "standings": 2},
-				{"matchday": 2, "standings": 5},
+				{"matchday": 1, "standings": 2, "points": 2, "wins": 1, "goals": 2, "goaldiff" = 1},
 			]
 		},
 		*all 18 teams in a separate object
@@ -172,6 +175,10 @@
 		data.forEach(function(d) {
 			d.matchday = +d.matchday;
 			d.standings = +d.standings;
+			d.points = +d.points;
+			d.wins = +d.wins;
+			d.goals = +d.goals;
+			d.goaldiff = +d.goaldiff;
 		});
 
 		x.domain([0.8, d3.max(data, function(d) {return d.matchday;})+0.2]);
@@ -188,12 +195,12 @@
 				.text("Matches Played");
 
 		//nest the data as an array with key = d.team
-		var dataNest = d3.nest()
+		dataNest = d3.nest()
 	        .key(function(d) {return d.team;})
 	        .entries(data);
 
 	    //get the length of the matchdays for each team
-	    var lengthall = dataNest[1].values.length - 1;
+	    lengthall = dataNest[1].values.length - 1;
 
 		console.log("Updated Data", dataNest);
 
