@@ -8,6 +8,9 @@
 		font-family: Avenir;
 		font-size: 12px;
 	}
+	.buttons {
+		float: left;
+	}
 	.clearfix {
 		clear: both;
 	}
@@ -75,13 +78,14 @@
 
 	//some space for the buttons
 	var buttonSelect = body.append("div")
-		.attr("class", "buttonSelectors")
+		.attr("class", "buttonSelectors-container")
 		.selectAll("div").data(buttons)
 			.enter().append("div")
-				.text(function(d) {return d;});
+				.text(function(d) {return d;})
+				.attr("class", "buttons");
 
-	// body.append("div")
-	// 	.attr("class", "clearfix");
+	body.append("div")
+		.attr("class", "clearfix");
 
 	//set size of svg element (width refers to chart width, height to chart height)
 	var svg = body.append("svg")
