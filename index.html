@@ -8,8 +8,26 @@
 		font-family: Avenir;
 		font-size: 12px;
 	}
-	.buttons {
-		float: left;
+	.button-group {
+		list-style: none;
+		margin: 0;
+		left: 0; 
+	}
+	.buttonsfor {
+		border-radius: 0;
+		border-style: solid;
+		border-width: 0;
+		cursor: pointer;
+		margin: 0 0 1rem;
+		position: relative;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		padding: 0.5rem 1rem 0.5rem 1rem;
+		background-color: #2BA6CB;
+		border-color: #2285A2;
+		color: #FFFFFF;
+		transition: background-color 300ms ease-out;
 	}
 	.clearfix {
 		clear: both;
@@ -74,15 +92,16 @@
 	body.append("h2")
 		.text("2014-2015 Bundesliga Season, Visualized");
 
+	//buttons headers
 	var buttons = ["Standings", "Points", "Wins", "Goals", "Goal Differential"];
 
 	//some space for the buttons
-	var buttonSelect = body.append("div")
-		.attr("class", "buttonSelectors-container")
-		.selectAll("div").data(buttons)
-			.enter().append("div")
+	var buttonSelect = body.append("ul")
+		.attr("class", "button-group")
+		.selectAll("li").data(buttons)
+			.enter().append("li")
 				.text(function(d) {return d;})
-				.attr("class", "buttons");
+				.attr("class", "buttonsfor");
 
 	body.append("div")
 		.attr("class", "clearfix");
