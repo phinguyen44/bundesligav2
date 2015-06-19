@@ -13,21 +13,14 @@
 		margin: 0;
 		left: 0; 
 	}
-	.buttonsfor {
-		border-radius: 0;
-		border-style: solid;
-		border-width: 0;
-		cursor: pointer;
-		margin: 0 0 1rem;
-		position: relative;
-		text-align: center;
-		text-decoration: none;
+	.buttons {
 		display: inline-block;
-		padding: 0.5rem 1rem 0.5rem 1rem;
-		background-color: #2BA6CB;
-		border-color: #2285A2;
-		color: #FFFFFF;
-		transition: background-color 300ms ease-out;
+		width: 100px;
+		border-radius: 5px;
+		padding: 10px 5px 10px 5px;
+		margin-left: 5px;
+		text-align: center;
+		border: 1px solid black;
 	}
 	.clearfix {
 		clear: both;
@@ -97,11 +90,11 @@
 
 	//some space for the buttons
 	var buttonSelect = body.append("ul")
-		.attr("class", "button-group")
-		.selectAll("li").data(buttons)
-			.enter().append("li")
-				.text(function(d) {return d;})
-				.attr("class", "buttonsfor");
+			.attr("class", "button-group")
+			.selectAll("li").data(buttons)
+				.enter().append("li")
+					.text(function(d) {return d;})
+					.attr("class", "buttons");
 
 	body.append("div")
 		.attr("class", "clearfix");
@@ -343,12 +336,6 @@
 
 	body.append("text")
 		.html("<a href='https://twitter.com/phister44'>Phi Nguyen</a>");
-
-	body.append("text")
-		.text(" with a lot of inspiration from ");
-
-	body.append("text")
-		.html("<a href='http://forrestthewoods.com/unbalanced-design-of-super-smash-brothers/'>this post.</a>");
 
 </script>
 </body>
