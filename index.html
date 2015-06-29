@@ -84,7 +84,7 @@
 //////////////////////////////////////////////////////////
 //			Set up basic elements of graph: 			//
 // 		margins, body, svg element, scales, axis		//
-//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
 
 	//set margins
 	var margin = {top: 20, right: 240, bottom: 60, left: 60},
@@ -96,6 +96,9 @@
 
 	body.append("h2")
 		.text("2014-2015 Bundesliga Season, Visualized");
+
+	//set initial starting point for data
+	var metric = "Standings";
 
 	//buttons headers
 	var buttons = ["Standings", "Points", "Wins", "Goals", "Goal Differential"];
@@ -110,14 +113,9 @@
 				if (d == "Standings")
 					return "buttons selected";
 				else
-					return "buttons"
-			})
-		.on("click", function(d) {
-			d3.select(".selected")
-				.classed("selected", false);
-			d3.select(this)
-				.classed("selected", true);
-		});
+					return "buttons";
+
+			});
 
 	body.append("div")
 		.attr("class", "clearfix");
@@ -134,7 +132,6 @@
 		.range([0, width]);
 
 	var y = d3.scale.linear()
-		.domain([0.5, 18.5])
 		.range([0,height]);
 
 	//add x axis
@@ -149,23 +146,26 @@
 		.orient("left")
 		.outerTickSize(0);
 
-	//add y axis label
-	svg.append("g")
-		.call(yAxis)
-		.attr("class", "axis")
-		.append("text")
-			.attr("transform", "rotate(-90)")
-			.attr("y", (-margin.left/2))
-			.attr("x", (-10-height/2))
-			.style("text-anchor", "middle")
-			.style("opacity", "0.4")
-			.text("Standings");
+	//really crappy way to select metric, for updating line
+	// function metricSelect() {
+	// 	if (metric = "Standings")
+	// 		return "standings";
+	// 	else if (metric = "Points")
+	// 		return "points";
+	// 	else if (metric = "Wins")
+	// 		return "wins";
+	// 	else if (metric = "Goals")
+	// 		return "goals";
+	// 	else
+	// 		return "goal differential";
+	// };
 
-	//define line
+	//define line 
 	var teamline = d3.svg.line()
 		.interpolate("monotone")
 		.x(function (d) {return x(d.matchday);})
 		.y(function (d) {return y(d.standings);});
+		// .y(function (d) {return y(d[[metricSelect()]]);});
 
 //////////////////////////////////////////////////////////
 //			Load data from csv							//
@@ -217,10 +217,16 @@
 			d.points = +d.points;
 			d.wins = +d.wins;
 			d.goals = +d.goals;
-			d.goaldiff = +d.goaldiff;
+			d[["goal differential"]] = +d[["goal differential"]];
 		});
 
 		x.domain([0.8, d3.max(data, function(d) {return d.matchday;})+0.2]);
+
+		//
+		//
+		//
+		//need to update this, based on metric selected, using d3.max min
+		y.domain([0.5, 18.5]);
 
 		//add x axis label
 		svg.append("g")
@@ -232,6 +238,19 @@
 				.style("text-anchor", "middle")
 				.style("opacity", "0.4")
 				.text("Matches Played");
+
+		//add y axis label
+		svg.append("g")
+			.call(yAxis)
+			.attr("class", "axis")
+			.append("text")
+				.attr("transform", "rotate(-90)")
+				.attr("y", (-margin.left/2))
+				.attr("x", (-10-height/2))
+				.style("text-anchor", "middle")
+				.style("opacity", "0.4")
+				//update this
+				.text(metric);	
 
 		//nest the data as an array with key = d.team
 		dataNest = d3.nest()
@@ -247,7 +266,17 @@
 		dataNest.forEach(function(d) {
 			return d.color = colors(d.key), 
 				d.logo = teamlogos(d.key), 
+				//might have to change this as well
 				d.label = d.values[lengthall].standings;
+		});
+
+		//set metric update functionality
+		buttonSelect.on("click", function(d) {
+			d3.select(".selected")
+				.classed("selected", false);
+			d3.select(this)
+				.classed("selected", true);
+			metric = d;
 		});
 
 		//////////////////////////////////////////////////////////
@@ -263,6 +292,7 @@
 		var linesetup = teamdata.append("path")
 			.attr("class", "line")
 			.style("stroke", function(d) {return d.color;})
+			//this part needs to change to change the value it returns
 			.attr("d", function(d) {return teamline(d.values);});
 
 		//add a dummy hoverline just to make it easier when someone hovers over for mouse over events
@@ -291,59 +321,63 @@
 			.attr("width", width*(1/20));
 
 		//////////////////////////////////////////////////////////
-		//			Add hover interactive elements				//
+		//			Add hover interactive elements			
+		// RIGHT NOW JUST TEMP	//
 		//////////////////////////////////////////////////////////
 
-		hoversetup.on("mouseover", function(d,i) {
-			d3.select(this)
-				.style("stroke", function(d) {return d.color;})
-				.style("opacity", "1")
-				this.parentNode.parentNode.appendChild(this.parentNode);
-			d3.select("#text-"+i)
-				.style("font-weight", "bold");
-		})
-		.on("mouseout", function(d,i) {
-			d3.select(this)
-				.transition()
-				.duration(400)
-				.style("opacity", "0")
-			d3.select("#text-"+i)
-				.style("font-weight", "")
-		});
+		// hoversetup.on("mouseover", function(d,i) {
+		// 	d3.select(this)
+		// 		.style("stroke", function(d) {return d.color;})
+		// 		.style("opacity", "1")
+		// 		this.parentNode.parentNode.appendChild(this.parentNode);
+		// 	d3.select("#text-"+i)
+		// 		.style("font-weight", "bold");
+		// })
+		// .on("mouseout", function(d,i) {
+		// 	d3.select(this)
+		// 		.transition()
+		// 		.duration(400)
+		// 		.style("opacity", "0")
+		// 	d3.select("#text-"+i)
+		// 		.style("font-weight", "")
+		// });
 
-		textsetup.on("mouseover", function(d,i) {
-			d3.select(this)
-				.style("font-weight", "bold")
-			d3.select("#path-"+i)
-				.style("stroke", function(d) {return d.color;})
-				.style("opacity", "1")
-				this.parentNode.parentNode.appendChild(this.parentNode);
-		})
-		.on("mouseout", function(d,i) {
-			d3.select(this)
-				.style("font-weight", "")
-			d3.select("#path-"+i)
-				.transition()
-				.duration(400)
-				.style("opacity", "0");
-		});
+		// textsetup.on("mouseover", function(d,i) {
+		// 	d3.select(this)
+		// 		.style("font-weight", "bold")
+		// 	d3.select("#path-"+i)
+		// 		.style("stroke", function(d) {return d.color;})
+		// 		.style("opacity", "1")
+		// 		this.parentNode.parentNode.appendChild(this.parentNode);
+		// })
+		// .on("mouseout", function(d,i) {
+		// 	d3.select(this)
+		// 		.style("font-weight", "")
+		// 	d3.select("#path-"+i)
+		// 		.transition()
+		// 		.duration(400)
+		// 		.style("opacity", "0");
+		// });
 
-		logosetup.on("mouseover", function(d,i) {
-			d3.select("#path-"+i)
-				.style("stroke", function(d) {return d.color;})
-				.style("opacity", "1")
-				this.parentNode.parentNode.appendChild(this.parentNode)
-			d3.select("#text-"+i)
-				.style("font-weight", "bold");
-		})
-		.on("mouseout", function(d,i) {
-			d3.select("#path-"+i)
-				.transition()
-				.duration(400)
-				.style("opacity", "0")
-			d3.select("#text-"+i)
-				.style("font-weight", "");
-		});
+		// logosetup.on("mouseover", function(d,i) {
+		// 	d3.select("#path-"+i)
+		// 		.style("stroke", function(d) {return d.color;})
+		// 		.style("opacity", "1")
+		// 		this.parentNode.parentNode.appendChild(this.parentNode)
+		// 	d3.select("#text-"+i)
+		// 		.style("font-weight", "bold");
+		// })
+		// .on("mouseout", function(d,i) {
+		// 	d3.select("#path-"+i)
+		// 		.transition()
+		// 		.duration(400)
+		// 		.style("opacity", "0")
+		// 	d3.select("#text-"+i)
+		// 		.style("font-weight", "");
+		// });
+
+		//add function to include all update things
+		//function updateAll()
 
 	});
 
