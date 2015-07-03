@@ -379,12 +379,17 @@
 			//match metric to object key names
 			newMetric = updateMetric.toLowerCase();
 
+			//UB is used to rescale axes (for the logos to be centered around dat a point)
+			var UB = -18;
+
 			//update y-axis domain
 			if (updateMetric == "Standings") {
 				y.domain([0.5, 18.5]);
+				UB = -18;
 			}
 			else {
 				y.domain([-0.5+d3.max(data, function(element) {return element[[newMetric]];}), -0.5+d3.min(data, function(element) {return element[[newMetric]]})]);
+				UB = d3.max(data, function(element) {return element[[newMetric]];});
 			};
 			svg.select(".yAxis")
 				.transition().duration(1000)
@@ -415,7 +420,7 @@
 			//update logos
 			logosetup
 				.transition().duration(1000)
-				.attr("y", function(d) {return y(-0.5+d.label);});
+				.attr("y", function(d) {return y((UB/18/2)+d.label);});
 			
 			//things that need to be updated: y-position of labels on logo and team name
 		};
