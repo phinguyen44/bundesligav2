@@ -37,12 +37,20 @@
 	.clearfix {
 		clear: both;
 	}
-	.axis path {
+	.xAxis path {
   		fill: none;
   		stroke: #000;
   		stroke-width: 2px;
 	}
-	.axis line {
+	.xAxis line {
+		fill: none;
+	}
+	.yAxis path {
+  		fill: none;
+  		stroke: #000;
+  		stroke-width: 2px;
+	}
+	.yAxis line {
 		fill: none;
 	}
 	.bar {
@@ -99,15 +107,16 @@
 
 	//set initial starting point for data
 	var metric = "Standings";
+	var newMetric = metric.toLowerCase();
 
 	//buttons headers
 	var buttons = ["Standings", "Points", "Wins", "Goals", "Goal Differential"];
 
 	//some space for the buttons
-	var buttonSelect = body.append("ul")
+	var buttonSelect = body.append("div")
 			.attr("class", "button-group")
-			.selectAll("li").data(buttons)
-		.enter().append("li")
+			.selectAll("div").data(buttons)
+		.enter().append("div")
 			.text(function(d) {return d;})
 			.attr("class", function(d) {
 				if (d == "Standings")
@@ -132,6 +141,7 @@
 		.range([0, width]);
 
 	var y = d3.scale.linear()
+		.domain([0.5, 18.5])
 		.range([0,height]);
 
 	//add x axis
@@ -146,26 +156,11 @@
 		.orient("left")
 		.outerTickSize(0);
 
-	//really crappy way to select metric, for updating line
-	// function metricSelect() {
-	// 	if (metric = "Standings")
-	// 		return "standings";
-	// 	else if (metric = "Points")
-	// 		return "points";
-	// 	else if (metric = "Wins")
-	// 		return "wins";
-	// 	else if (metric = "Goals")
-	// 		return "goals";
-	// 	else
-	// 		return "goal differential";
-	// };
-
 	//define line 
 	var teamline = d3.svg.line()
 		.interpolate("monotone")
 		.x(function (d) {return x(d.matchday);})
 		.y(function (d) {return y(d.standings);});
-		// .y(function (d) {return y(d[[metricSelect()]]);});
 
 //////////////////////////////////////////////////////////
 //			Load data from csv							//
@@ -222,18 +217,13 @@
 
 		x.domain([0.8, d3.max(data, function(d) {return d.matchday;})+0.2]);
 
-		//
-		//
-		//
-		//need to update this, based on metric selected, using d3.max min
-		y.domain([0.5, 18.5]);
-
 		//add x axis label
 		svg.append("g")
 			.call(xAxis)
 			.attr("transform", "translate(0," + (height-1) + ")")
-			.attr("class", "axis")
+			.attr("class", "xAxis")
 			.append("text")
+				.attr("class", "xAxisLabel")
 				.attr("transform", "translate(" + (-10+width/2) + "," + (5+margin.bottom/2) +")")
 				.style("text-anchor", "middle")
 				.style("opacity", "0.4")
@@ -242,15 +232,15 @@
 		//add y axis label
 		svg.append("g")
 			.call(yAxis)
-			.attr("class", "axis")
+			.attr("class", "yAxis")
 			.append("text")
+				.attr("class", "yAxisLabel")
 				.attr("transform", "rotate(-90)")
 				.attr("y", (-margin.left/2))
 				.attr("x", (-10-height/2))
 				.style("text-anchor", "middle")
 				.style("opacity", "0.4")
-				//update this
-				.text(metric);	
+				.text("Standings");	
 
 		//nest the data as an array with key = d.team
 		dataNest = d3.nest()
@@ -272,11 +262,7 @@
 
 		//set metric update functionality
 		buttonSelect.on("click", function(d) {
-			d3.select(".selected")
-				.classed("selected", false);
-			d3.select(this)
-				.classed("selected", true);
-			metric = d;
+			updateAll(d);
 		});
 
 		//////////////////////////////////////////////////////////
@@ -376,8 +362,63 @@
 		// 		.style("font-weight", "");
 		// });
 
-		//add function to include all update things
-		//function updateAll()
+		//add function to include all update things (input should be metric)
+		function updateAll(updateMetric) {
+			//update button state
+			d3.select(".selected")
+				.classed("selected", false);
+			buttonSelect
+				.filter(function(d) {return d == updateMetric;})
+				.classed("selected", true);
+			metric = updateMetric;
+
+			//update y-axis title
+			svg.select(".yAxisLabel")
+				.text(updateMetric);
+
+			//match metric to object key names
+			newMetric = updateMetric.toLowerCase();
+
+			//update y-axis domain
+			if (updateMetric == "Standings") {
+				y.domain([0.5, 18.5]);
+			}
+			else {
+				y.domain([-0.5+d3.max(data, function(element) {return element[[newMetric]];}), -0.5+d3.min(data, function(element) {return element[[newMetric]]})]);
+			};
+			svg.select(".yAxis")
+				.transition().duration(1000)
+				.call(yAxis);
+
+			//redefine line
+			teamline = d3.svg.line()
+				.interpolate("monotone")
+				.x(function (d) {return x(d.matchday);})
+				.y(function (d) {return y(d[[newMetric]]);});
+
+			//update dataNest
+			dataNest.forEach(function(d) {
+				return d.color = colors(d.key), 
+					d.logo = teamlogos(d.key), 
+					d.label = d.values[lengthall][[newMetric]];
+			});
+			//update line
+			linesetup
+				.transition().duration(1000)
+				.attr("d", function(d) {return teamline(d.values);});
+
+			//update text
+			textsetup
+				.transition().duration(1000)
+				.attr("y", function(d) {return y(d.label);});
+
+			//update logos
+			logosetup
+				.transition().duration(1000)
+				.attr("y", function(d) {return y(0.5+d.label);});
+			
+			//things that need to be updated: y-position of labels on logo and team name
+		};
 
 	});
 
