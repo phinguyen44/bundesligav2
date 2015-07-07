@@ -105,6 +105,17 @@
 	body.append("h2")
 		.text("2014-2015 Bundesliga Season, Visualized");
 
+	body.append("text")
+		.style("font-weight", "bold")
+		.text("How to use:");
+
+	body.append("text")
+		.text(" Select a metric to view and compare team performance over the course of the 2014-2015 Bundesliga season. Mouse over a team name or line to highlight an individual team.");
+	
+	//dummy line break for spacing
+	body.append("h6")
+		.text("");
+
 	//set initial starting point for data
 	var metric = "Standings";
 	var newMetric = metric.toLowerCase();
@@ -186,7 +197,7 @@
 	var teamlogos;
 	var colors;
 
-	d3.csv("teamcolor.csv", function(error,data){
+	d3.csv("teamcolor.csv", function(error,data) {
 
 		//ordinal scale for team URLS
 		teamlogos = d3.scale.ordinal()
@@ -250,8 +261,6 @@
 	    //get the length of the matchdays for each team
 	    lengthall = dataNest[1].values.length - 1;
 
-		console.log("Updated Data", dataNest);
-
 		//map color, logo, and placement of end label to teams
 		dataNest.forEach(function(d) {
 			return d.color = colors(d.key), 
@@ -259,6 +268,8 @@
 				//might have to change this as well
 				d.label = d.values[lengthall].standings;
 		});
+
+		console.log("Updated Data", dataNest);
 
 		//set metric update functionality
 		buttonSelect.on("click", function(d) {
@@ -307,62 +318,63 @@
 			.attr("width", width*(1/20));
 
 		//////////////////////////////////////////////////////////
-		//			Add hover interactive elements			
-		// RIGHT NOW JUST TEMP	//
+		//			Add hover interactive elements				//
 		//////////////////////////////////////////////////////////
 
-		// hoversetup.on("mouseover", function(d,i) {
-		// 	d3.select(this)
-		// 		.style("stroke", function(d) {return d.color;})
-		// 		.style("opacity", "1")
-		// 		this.parentNode.parentNode.appendChild(this.parentNode);
-		// 	d3.select("#text-"+i)
-		// 		.style("font-weight", "bold");
-		// })
-		// .on("mouseout", function(d,i) {
-		// 	d3.select(this)
-		// 		.transition()
-		// 		.duration(400)
-		// 		.style("opacity", "0")
-		// 	d3.select("#text-"+i)
-		// 		.style("font-weight", "")
-		// });
+		hoversetup.on("mouseover", function(d,i) {
+			d3.select(this)
+				.style("stroke", function(d) {return d.color;})
+				.style("opacity", "1")
+				this.parentNode.parentNode.appendChild(this.parentNode);
+			d3.select("#text-"+i)
+				.style("font-weight", "bold");
+		})
+		.on("mouseout", function(d,i) {
+			d3.select(this)
+				.transition()
+				.duration(400)
+				.style("opacity", "0")
+			d3.select("#text-"+i)
+				.style("font-weight", "")
+		});
 
-		// textsetup.on("mouseover", function(d,i) {
-		// 	d3.select(this)
-		// 		.style("font-weight", "bold")
-		// 	d3.select("#path-"+i)
-		// 		.style("stroke", function(d) {return d.color;})
-		// 		.style("opacity", "1")
-		// 		this.parentNode.parentNode.appendChild(this.parentNode);
-		// })
-		// .on("mouseout", function(d,i) {
-		// 	d3.select(this)
-		// 		.style("font-weight", "")
-		// 	d3.select("#path-"+i)
-		// 		.transition()
-		// 		.duration(400)
-		// 		.style("opacity", "0");
-		// });
+		textsetup.on("mouseover", function(d,i) {
+			d3.select(this)
+				.style("font-weight", "bold")
+			d3.select("#path-"+i)
+				.style("stroke", function(d) {return d.color;})
+				.style("opacity", "1")
+				this.parentNode.parentNode.appendChild(this.parentNode);
+		})
+		.on("mouseout", function(d,i) {
+			d3.select(this)
+				.style("font-weight", "")
+			d3.select("#path-"+i)
+				.transition()
+				.duration(400)
+				.style("opacity", "0");
+		});
 
-		// logosetup.on("mouseover", function(d,i) {
-		// 	d3.select("#path-"+i)
-		// 		.style("stroke", function(d) {return d.color;})
-		// 		.style("opacity", "1")
-		// 		this.parentNode.parentNode.appendChild(this.parentNode)
-		// 	d3.select("#text-"+i)
-		// 		.style("font-weight", "bold");
-		// })
-		// .on("mouseout", function(d,i) {
-		// 	d3.select("#path-"+i)
-		// 		.transition()
-		// 		.duration(400)
-		// 		.style("opacity", "0")
-		// 	d3.select("#text-"+i)
-		// 		.style("font-weight", "");
-		// });
+		logosetup.on("mouseover", function(d,i) {
+			d3.select("#path-"+i)
+				.style("stroke", function(d) {return d.color;})
+				.style("opacity", "1")
+				this.parentNode.parentNode.appendChild(this.parentNode)
+			d3.select("#text-"+i)
+				.style("font-weight", "bold");
+		})
+		.on("mouseout", function(d,i) {
+			d3.select("#path-"+i)
+				.transition()
+				.duration(400)
+				.style("opacity", "0")
+			d3.select("#text-"+i)
+				.style("font-weight", "");
+		});
 
-		//add function to include all update things (input should be metric)
+		//////////////////////////////////////////////////////////
+		//			Wrap everything in an update function		//
+		//////////////////////////////////////////////////////////
 		function updateAll(updateMetric) {
 			//update button state
 			d3.select(".selected")
@@ -384,12 +396,12 @@
 
 			//update y-axis domain
 			if (updateMetric == "Standings") {
-				y.domain([0.5, 18.5]);
 				UB = -18;
+				y.domain([0.5, 18.5]);
 			}
 			else {
-				y.domain([-0.5+d3.max(data, function(element) {return element[[newMetric]];}), -0.5+d3.min(data, function(element) {return element[[newMetric]]})]);
 				UB = d3.max(data, function(element) {return element[[newMetric]];});
+				y.domain([-(UB/18/2)+d3.max(data, function(element) {return element[[newMetric]];}), -(UB/18/2)+d3.min(data, function(element) {return element[[newMetric]]})]);
 			};
 			svg.select(".yAxis")
 				.transition().duration(1000)
@@ -401,7 +413,7 @@
 				.x(function (d) {return x(d.matchday);})
 				.y(function (d) {return y(d[[newMetric]]);});
 
-			//update dataNest
+			//update dataNest to get the y-position of new metric
 			dataNest.forEach(function(d) {
 				return d.color = colors(d.key), 
 					d.logo = teamlogos(d.key), 
@@ -409,6 +421,11 @@
 			});
 			//update line
 			linesetup
+				.transition().duration(1000)
+				.attr("d", function(d) {return teamline(d.values);});
+
+			//update hoverline
+			hoversetup
 				.transition().duration(1000)
 				.attr("d", function(d) {return teamline(d.values);});
 
@@ -420,9 +437,7 @@
 			//update logos
 			logosetup
 				.transition().duration(1000)
-				.attr("y", function(d) {return y((UB/18/2)+d.label);});
-			
-			//things that need to be updated: y-position of labels on logo and team name
+				.attr("y", function(d) {return y((UB/18/2)+d.label);});			
 		};
 
 	});
